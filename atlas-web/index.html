@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Atlas Soluciones Tecnológicas — Desarrollo web y sistemas a medida para PyMEs y ONGs en Argentina</title>
+<meta name="description" content="Tiendas online sin comisiones, portales de socios, sistemas de turnos y de gestión. Desarrollo a medida para PyMEs y ONGs en Argentina. Precios claros desde USD 300." />
+<link rel="icon" type="image/png" href="assets/logo.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700;800&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0F1B20;
+    --bg-alt: #14232A;
+    --panel: #182B33;
+    --line: #24343D;
+    --blue: #2E8FBE;
+    --blue-soft: rgba(46,143,190,0.12);
+    --ink: #E8EEF1;
+    --mute: #8CA3AD;
+    --ok: #6FBF8E;
+    --wa: #25D366;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { transition: none !important; }
+  }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+  }
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--blue);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+
+  /* ---- Secciones tipo plano técnico ---- */
+  .blueprint {
+    background-color: var(--bg);
+    background-image:
+      linear-gradient(rgba(36,52,61,0.2) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(36,52,61,0.2) 1px, transparent 1px);
+    background-size: 44px 44px;
+    border-top: 1px solid var(--line);
+  }
+  .blueprint.alt { background-color: var(--bg-alt); }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 88px 24px; }
+
+  .plate-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    color: var(--blue);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  h2 {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 700;
+    font-size: clamp(26px, 4vw, 38px);
+    line-height: 1.15;
+    max-width: 640px;
+  }
+  .lead { color: var(--mute); font-size: 17px; max-width: 620px; margin-top: 16px; }
+  header.plate { margin-bottom: 48px; }
+
+  /* ---- Botones ---- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 26px;
+    border-radius: 8px;
+    font-family: 'Archivo', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    text-decoration: none;
+    transition: all .18s ease;
+    background: var(--blue);
+    color: #08141A;
+    border: 1px solid transparent;
+  }
+  .btn:hover { background: #3AA3D4; transform: translateY(-1px); }
+  .btn.ghost {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--line);
+  }
+  .btn.ghost:hover { border-color: var(--blue); background: transparent; }
+
+  /* ---- Nav ---- */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(15,27,32,0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-inner {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .brand { text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  .brand img { width: 36px; height: 36px; object-fit: contain; }
+  .brand-text { display: flex; flex-direction: column; line-height: 1.2; }
+  .brand-name {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    font-size: 19px;
+    color: var(--ink);
+  }
+  .brand-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    color: var(--blue);
+    text-transform: uppercase;
+  }
+  .nav-links { display: flex; align-items: center; gap: 22px; }
+  .nav-links a.link {
+    color: var(--mute);
+    text-decoration: none;
+    font-size: 14px;
+    font-family: 'Archivo', sans-serif;
+  }
+  .nav-links a.link:hover { color: var(--ink); }
+  .btn.small { padding: 10px 18px; font-size: 14px; }
+  @media (max-width: 720px) { .nav-links a.link { display: none; } }
+
+  /* ---- Hero ---- */
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 56px;
+    align-items: center;
+  }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    color: var(--blue);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  h1 {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 800;
+    font-size: clamp(34px, 5vw, 52px);
+    line-height: 1.08;
+  }
+  .hero-sub { color: var(--mute); font-size: 19px; line-height: 1.65; max-width: 600px; margin-top: 22px; }
+  .hero-ctas { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 34px; }
+  .trustbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 28px;
+    margin-top: 44px;
+    padding-top: 24px;
+    border-top: 1px dashed var(--line);
+  }
+  .trustbar span { display: flex; align-items: center; gap: 8px; color: var(--mute); font-size: 14px; }
+
+  /* ---- Diagrama de stack (elemento firma) ---- */
+  .stack { width: 100%; max-width: 420px; justify-self: center; }
+  .stack-layer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 8px;
+  }
+  .stack-layer .n {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: var(--mute);
+    text-transform: uppercase;
+  }
+  .stack-layer .l { font-family: 'Archivo', sans-serif; font-weight: 600; font-size: 15px; }
+  .stack-layer .d {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--blue);
+    text-align: right;
+  }
+  .stack-caption {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--mute);
+    text-align: center;
+    margin-top: 12px;
+  }
+
+  /* ---- Grillas de cards ---- */
+  .grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .grid.narrow { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .grid.steps { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .grid.why { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: border-color .18s ease, transform .18s ease;
+  }
+  .card.hoverable:hover { border-color: var(--blue); transform: translateY(-2px); }
+  .card h3 { font-family: 'Archivo', sans-serif; font-size: 19px; }
+  .card .for { color: var(--mute); font-size: 14px; margin-top: 6px; }
+  .card-top { display: flex; align-items: center; justify-content: space-between; }
+  .price-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--blue);
+    background: var(--blue-soft);
+    padding: 4px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+  ul.checks { list-style: none; display: grid; gap: 8px; }
+  ul.checks li { display: flex; gap: 8px; font-size: 14px; line-height: 1.5; }
+  .check { color: var(--ok); flex-shrink: 0; font-weight: 700; }
+  .card-link {
+    margin-top: auto;
+    color: var(--blue);
+    font-family: 'Archivo', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+  }
+  .card-link:hover { text-decoration: underline; }
+  .icon { color: var(--blue); font-size: 20px; }
+
+  /* ---- Casos ---- */
+  .case { border-left: 3px solid var(--blue); }
+  .case-type {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--blue);
+    text-transform: uppercase;
+  }
+  .case p { color: var(--mute); font-size: 15px; line-height: 1.65; }
+
+  /* ---- Sobre mí ---- */
+  .about-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 44px;
+    align-items: center;
+  }
+  .about-grid p { color: var(--mute); font-size: 16px; line-height: 1.7; margin-top: 16px; }
+  .photo-slot {
+    background: var(--panel);
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+    aspect-ratio: 4 / 5;
+    max-width: 340px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--mute);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    justify-self: center;
+    width: 100%;
+  }
+
+  /* ---- Proceso ---- */
+  ol.steps-list { list-style: none; }
+  .step-n { font-family: 'JetBrains Mono', monospace; color: var(--blue); font-size: 13px; margin-bottom: 12px; }
+  .card p.step-d { color: var(--mute); font-size: 14px; }
+
+  /* ---- Planes ---- */
+  .plan { position: relative; }
+  .plan.featured { border-color: var(--blue); }
+  .plan-badge {
+    position: absolute;
+    top: -11px;
+    left: 24px;
+    background: var(--blue);
+    color: #08141A;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 5px;
+  }
+  .plan-price { font-family: 'JetBrains Mono', monospace; color: var(--blue); font-size: 15px; }
+  .plan .tagline { color: var(--mute); font-size: 14px; margin-bottom: 4px; }
+
+  /* ---- FAQ ---- */
+  .faq { max-width: 760px; }
+  .faq-item { border-bottom: 1px solid var(--line); }
+  .faq-q {
+    width: 100%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 4px;
+    text-align: left;
+    font-family: 'Archivo', sans-serif;
+    color: var(--ink);
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .faq-q .chev { color: var(--blue); transition: transform .2s; flex-shrink: 0; }
+  .faq-item[data-open="true"] .chev { transform: rotate(180deg); }
+  .faq-a {
+    display: none;
+    color: var(--mute);
+    font-size: 15px;
+    line-height: 1.7;
+    margin: 0 4px 22px;
+    max-width: 680px;
+  }
+  .faq-item[data-open="true"] .faq-a { display: block; }
+
+  /* ---- Cierre ---- */
+  .final { text-align: center; max-width: 640px; margin: 0 auto; }
+  .final h2 { font-size: clamp(28px, 5vw, 42px); font-weight: 800; max-width: none; }
+  .final p { color: var(--mute); font-size: 17px; margin-top: 18px; }
+  .final .ctas { display: flex; justify-content: center; gap: 14px; margin-top: 30px; flex-wrap: wrap; }
+
+  /* ---- Footer ---- */
+  footer { background: #0B1418; border-top: 1px solid var(--line); }
+  .footer-inner {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 28px 24px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+  }
+  .footer-brand { display: flex; align-items: center; gap: 10px; font-family: 'Archivo', sans-serif; font-weight: 700; letter-spacing: 0.06em; }
+  .footer-brand img { width: 24px; height: 24px; object-fit: contain; opacity: 0.85; }
+  .footer-brand small { color: var(--blue); font-weight: 400; font-size: 12px; }
+  .footer-meta { color: var(--mute); font-size: 13px; font-family: 'JetBrains Mono', monospace; }
+
+  /* ---- WhatsApp flotante ---- */
+  .wa-float {
+    position: fixed;
+    bottom: 22px;
+    right: 22px;
+    z-index: 60;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--wa);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+    text-decoration: none;
+  }
+  .wa-float svg { width: 28px; height: 28px; fill: #08141A; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="brand" href="#inicio">
+      <img src="assets/logo.png" alt="Logo de Atlas Soluciones Tecnológicas" />
+      <span class="brand-text">
+        <span class="brand-name">ATLAS</span>
+        <span class="brand-sub">Soluciones Tecnológicas</span>
+      </span>
+    </a>
+    <div class="nav-links">
+      <a class="link" href="#servicios">Servicios</a>
+      <a class="link" href="#proyectos">Proyectos</a>
+      <a class="link" href="#mantenimiento">Mantenimiento</a>
+      <a class="link" href="#faq">Preguntas</a>
+      <a class="btn small" href="https://wa.me/5490000000000?text=Hola%20Atlas%2C%20quiero%20hacer%20una%20consulta%20por%20un%20proyecto" target="_blank" rel="noreferrer">Hablemos →</a>
+    </div>
+  </div>
+</nav>
+
+<section class="blueprint" id="inicio">
+  <div class="wrap">
+    <div class="hero-grid">
+      <div>
+        <div class="hero-eyebrow">atlastech.com.ar — desarrollo a medida</div>
+        <h1>Desarrollo web y sistemas a medida para PyMEs y ONGs en Argentina</h1>
+        <p class="hero-sub">Tiendas online sin comisiones, portales de socios, sistemas de turnos y de gestión. Sin plantillas ni abonos de plataforma: software propio, hecho para cómo trabaja tu negocio.</p>
+        <div class="hero-ctas">
+          <a class="btn" href="https://wa.me/5490000000000?text=Hola%20Atlas%2C%20quiero%20hacer%20una%20consulta%20por%20un%20proyecto" target="_blank" rel="noreferrer">💬 Consultar por WhatsApp</a>
+          <a class="btn ghost" href="#servicios">Ver servicios y precios</a>
+        </div>
+        <div class="trustbar">
+          <span><span class="check">✓</span> Proyectos reales en producción</span>
+          <span><span class="check">✓</span> Precios claros desde el inicio</span>
+          <span><span class="check">✓</span> Todo queda a tu nombre</span>
+        </div>
+      </div>
+      <div class="stack" aria-label="Diagrama de capas de un sistema">
+        <div class="stack-layer">
+          <div><div class="n">01</div><div class="l">Interfaz</div></div>
+          <div class="d">Next.js · React · TypeScript</div>
+        </div>
+        <div class="stack-layer" style="opacity:.94">
+          <div><div class="n">02</div><div class="l">Lógica</div></div>
+          <div class="d">API · Autenticación</div>
+        </div>
+        <div class="stack-layer" style="opacity:.88">
+          <div><div class="n">03</div><div class="l">Datos</div></div>
+          <div class="d">SQLite · PostgreSQL</div>
+        </div>
+        <div class="stack-layer" style="opacity:.82">
+          <div><div class="n">04</div><div class="l">Infraestructura</div></div>
+          <div class="d">Deploy · Hosting · Dominio</div>
+        </div>
+        <div class="stack-caption">cada capa, sostenida por la anterior</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="blueprint alt">
+  <div class="wrap">
+    <header class="plate">
+      <div class="plate-code">Lámina 01 — Diagnóstico</div>
+      <h2>¿Te suena alguna de estas?</h2>
+      <p class="lead">Los sistemas a medida no son para empresas gigantes. Son para resolver estos problemas concretos.</p>
+    </header>
+    <div class="grid narrow">
+      <div class="card">
+        <h3>Vendés por mensajes directos</h3>
+        <p class="for">Cada venta son veinte mensajes: precio, stock, datos, comprobante. Una tienda propia cobra y registra sola, sin comisiones por venta.</p>
+      </div>
+      <div class="card">
+        <h3>Gestionás socios en planillas</h3>
+        <p class="for">Altas, bajas y cuotas a mano, y nadie sabe cuál es la versión buena del Excel. Un portal de socios ordena el padrón y cobra por vos.</p>
+      </div>
+      <div class="card">
+        <h3>Agendás turnos por WhatsApp</h3>
+        <p class="for">Tu agenda vive en el chat y las ausencias no avisan. Un sistema de turnos agenda 24/7 y manda recordatorios automáticos.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="blueprint">
+  <div class="wrap">
+    <header class="plate">
+      <div class="plate-code">Lámina 02 — Por qué Atlas</div>
+      <h2>Cuatro razones por las que los proyectos no se caen a mitad de camino</h2>
+    </header>
+    <div class="grid why">
+      <div class="card">
+        <span class="icon">🤝</span>
+        <h3>Un solo interlocutor</h3>
+        <p class="for">Del relevamiento al deploy, hablás siempre con quien programa. Sin intermediarios ni cadenas de tercerización.</p>
+      </div>
+      <div class="card">
+        <span class="icon">🧱</span>
+        <h3>Stack moderno y mantenible</h3>
+        <p class="for">Next.js, TypeScript y bases de datos livianas o robustas según el caso. Código que se puede sostener en el tiempo.</p>
+      </div>
+      <div class="card">
+        <span class="icon">🔧</span>
+        <h3>Pensado para PyMEs y ONGs</h3>
+        <p class="for">Presupuestos claros, ajustados a la escala real del proyecto. Sin vueltas ni letra chica.</p>
+      </div>
+      <div class="card">
+        <span class="icon">🛡️</span>
+        <h3>Seguridad desde el diseño</h3>
+        <p class="for">Autenticación robusta, buenas prácticas de manejo de datos y criterio de hardening desde el primer commit.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="blueprint alt" id="servicios">
+  <div class="wrap">
+    <header class="plate">
+      <div class="plate-code">Lámina 03 — Servicios</div>
+      <h2>Servicios y precios, sin vueltas</h2>
+      <p class="lead">Precios de referencia en USD (abonás en pesos al cambio del día). El presupuesto final depende del alcance y te lo doy por escrito antes de empezar.</p>
+    </header>
+    <div class="grid">
+
+      <div class="card hoverable">
+        <div class="card-top"><span class="icon">🌐</span><span class="price-tag">desde USD 300</span></div>
+        <div><h3>Landing page profesional</h3><p class="for">Para presentar tu negocio y captar consultas.</p></div>
+        <ul class="checks">
+          <li><span class="check">✓</span> Diseño a medida (sin plantillas)</li>
+          <li><span class="check">✓</span> Optimizada para Google y celulares</li>
+          <li><span class="check">✓</span> Formulario + botón de WhatsApp</li>
+          <li><span class="check">✓</span> Entrega en 1–2 semanas</li>
+        </ul>
+        <a class="card-link" href="https://wa.me/5490000000000?text=Hola%20Atlas%2C%20quiero%20un%20presupuesto%20por%20una%20landing%20page" target="_blank" rel="noreferrer">Pedir presupuesto →</a>
+      </div>
+
+      <div class="card hoverable">
+        <div class="card-top"><span class="icon">🏢</span><span class="price-tag">desde USD 650</span></div>
+        <div><h3>Sitio institucional</h3><p class="for">Para empresas y organizaciones que necesitan presencia seria.</p></div>
+        <ul class="checks">
+          <li><span class="check">✓</span> Hasta 8 secciones</li>
+          <li><span class="check">✓</span> Autogestión de contenido</li>
+          <li><span class="check">✓</span> SEO técnico incluido</li>
+          <li><span class="check">✓</span> Correo y dominio configurados</li>
+        </ul>
+        <a class="card-link" href="https://wa.me/5490000000000?text=Hola%20Atlas%2C%20quiero%20un%20presupuesto%20por%20un%20sitio%20institucional" target="_blank" rel="noreferrer">Pedir presupuesto →</a>
+      </div>
+
+      <div class="card hoverable">
+        <div class="card-top"><span class="icon">🛒</span><span class="price-tag">desde USD 1.200</span></div>
+        <div><h3>Tienda online a medida</h3><p class="for">Para vender sin pagar comisiones por cada venta.</p></div>
+        <ul class="checks">
+          <li><span class="check">✓</span> Catálogo y carrito propios</li>
+          <li><span class="check">✓</span> Pagos con Mercado Pago</li>
+          <li><span class="check">✓</span> Sin abonos de plataforma</li>
+          <li><span class="check">✓</span> Panel de pedidos y stock</li>
+        </ul>
+        <a class="card-link" href="https://wa.me/5490000000000?text=Hola%20Atlas%2C%20quiero%20un%20presupuesto%20por%20una%20tienda%20online" target="_blank" rel="noreferrer">Pedir presupuesto →</a>
+      </div>
+
+      <div class="card hoverable">
+        <div class="card-top"><span class="icon">📅</span><span class="price-tag">desde USD 800</span></div>
+        <div><h3>Sistema de turnos</h3><p class="for">Para profesionales que agendan por WhatsApp a mano.</p></div>
+        <ul class="checks">
+          <li><span class="check">✓</span> Agenda online 24/7</li>
+          <li><span class="check">✓</span> Recordatorios automáticos</li>
+          <li><span class="check">✓</span> Cobro de seña integrado</li>
+          <li><span class="check">✓</span> Integrado a tu web</li>
+        </ul>
+        <a class="card-link" href="https://wa.me/5490000000000?text=Hola%20Atlas%2C%20quiero%20un%20presupuesto%20por%20un%20sistema%20de%20turnos" target="_blank" rel="noreferrer">Pedir presupuesto →</a>
+      </div>
+
+      <div class="card hoverable">
+        <div class="card-top"><span class="icon">👥</span><span class="price-tag">desde USD 1.400</span></div>
+        <div><h3>Portal de socios</h3><p class="for">Para clubes y ONGs que gestionan padrones en planillas.</p></div>
+        <ul class="checks">
+          <li><span class="check">✓</span> Alta y cobro de cuotas</li>
+          <li><span class="check">✓</span> Credenciales con QR</li>
+          <li><span class="check">✓</span> Panel de administración con roles</li>
+          <li><span class="check">✓</span> Reportes exportables</li>
+        </ul>
+        <a class="card-link" href="https://wa.me/5490000000000?text=Hola%20Atlas%2C%20quiero%20un%20presupuesto%20por%20un%20portal%20de%20socios" target="_blank" rel="noreferrer">Pedir presupuesto →</a>
+      </div>
+
+      <div class="card hoverable">
+        <div class="card-top"><span class="icon">📦</span><span class="price-tag">desde USD 2.200</span></div>
+        <div><h3>Sistema de gestión</h3><p class="for">Para negocios que ya no entran en un Excel.</p></div>
+        <ul class="checks">
+          <li><span class="check">✓</span> Ventas, stock y caja</li>
+          <li><span class="check">✓</span> Funciona sin internet (escritorio)</li>
+          <li><span class="check">✓</span> Exportación a Excel y PDF</li>
+          <li><span class="check">✓</span> Hecho para tu operación real</li>
+        </ul>
+        <a class="card-link" href="https://wa.me/5490000000000?text=Hola%20Atlas%2C%20quiero%20un%20presupuesto%20por%20un%20sistema%20de%20gesti%C3%B3n" target="_blank" rel="noreferrer">Pedir presupuesto →</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section class="blueprint" id="proyectos">
+  <div class="wrap">
+    <header class="plate">
+      <div class="plate-code">Lámina 04 — Obra ejecutada</div>
+      <h2>Proyectos reales, funcionando hoy</h2>
+      <p class="lead">No son maquetas de portfolio: son sistemas en producción que clientes usan todos los días.</p>
+    </header>
+    <div class="grid">
+      <article class="card case">
+        <div class="case-type">Portal de socios · ONG</div>
+        <h3>Campo Escuela Flandes</h3>
+        <p>El padrón de socios pasó de planillas manuales a un portal con credenciales QR y panel de administración de doble rol. La gestión que llevaba horas por semana hoy se resuelve en minutos.</p>
+      </article>
+      <article class="card case">
+        <div class="case-type">Sitio institucional · Industria</div>
+        <h3>Nasello Cables</h3>
+        <p>Sitio rápido y estable en su propio hosting, con recepción de consultas y listas de precios exportables a Excel. La empresa dejó de depender de terceros para actualizar su presencia online.</p>
+      </article>
+      <article class="card case">
+        <div class="case-type">Portal institucional · ONG</div>
+        <h3>Asociación Civil Luján</h3>
+        <p>Portal con área de socios y autenticación propia. Los miembros acceden a su información sin llamados ni correos, y la comisión administra todo desde un solo lugar.</p>
+      </article>
+      <article class="card case">
+        <div class="case-type">Punto de venta · Comercio</div>
+        <h3>Nueva Siembra</h3>
+        <p>Sistema de escritorio de ventas y stock que funciona aunque se corte internet, con cierres de caja y reportes en Excel y PDF. El control del negocio dejó de depender de anotaciones a mano.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="blueprint alt">
+  <div class="wrap">
+    <div class="about-grid">
+      <div>
+        <header class="plate" style="margin-bottom: 0;">
+          <div class="plate-code">Lámina 05 — Responsable de obra</div>
+          <h2>Quién está detrás de Atlas</h2>
+        </header>
+        <p>Soy Vicente, desarrollador full-stack y fundador de Atlas. Trabajo con tecnologías modernas (Next.js, TypeScript, React) y me especializo en traducir la operación real de un negocio a un sistema que la simplifique.</p>
+        <p>Trabajás directo conmigo, de la primera reunión a la entrega: sin intermediarios, sin que el proyecto pase de mano en mano. Y además me formo en ciberseguridad, así que la seguridad de tu sitio no es un extra: es parte del diseño desde el día uno.</p>
+      </div>
+      <div class="photo-slot" role="img" aria-label="Espacio reservado para foto profesional">[ TU FOTO PROFESIONAL ACÁ ]</div>
+    </div>
+  </div>
+</section>
+
+<section class="blueprint">
+  <div class="wrap">
+    <header class="plate">
+      <div class="plate-code">Lámina 06 — Método</div>
+      <h2>Cómo trabajamos</h2>
+      <p class="lead">Un proceso en cinco etapas, en orden. Sabés qué pasa en cada una y qué recibís al final.</p>
+    </header>
+    <ol class="steps-list grid steps">
+      <li class="card">
+        <div class="step-n">01</div>
+        <h3>Relevamiento</h3>
+        <p class="step-d">Una llamada o chat para entender tu negocio y el problema real. Sin compromiso.</p>
+      </li>
+      <li class="card">
+        <div class="step-n">02</div>
+        <h3>Propuesta por escrito</h3>
+        <p class="step-d">Alcance, precio cerrado y plazo concreto. Sabés exactamente qué recibís.</p>
+      </li>
+      <li class="card">
+        <div class="step-n">03</div>
+        <h3>Desarrollo con avances</h3>
+        <p class="step-d">Ves el proyecto crecer con entregas parciales y feedback constante. Nada de desaparecer dos meses.</p>
+      </li>
+      <li class="card">
+        <div class="step-n">04</div>
+        <h3>Entrega y capacitación</h3>
+        <p class="step-d">Puesta en producción con dominio y hosting configurados. Todo queda a tu nombre.</p>
+      </li>
+      <li class="card">
+        <div class="step-n">05</div>
+        <h3>Soporte post-lanzamiento</h3>
+        <p class="step-d">Ajustes, mantenimiento y evolución del sistema en el tiempo, si querés que siga cuidándolo.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section class="blueprint alt" id="mantenimiento">
+  <div class="wrap">
+    <header class="plate">
+      <div class="plate-code">Lámina 07 — Seguridad y mantenimiento</div>
+      <h2>Tu sistema no se termina el día de la entrega</h2>
+      <p class="lead">Un sitio sin mantenimiento se rompe, se desactualiza o lo hackean. Estos planes lo mantienen seguro y en línea para que vos te ocupes de tu negocio.</p>
+    </header>
+    <div class="grid narrow">
+      <div class="card plan">
+        <div><h3>🛡️ Esencial</h3></div>
+        <div class="plan-price">USD 30/mes</div>
+        <p class="tagline">Tu sitio, siempre en línea.</p>
+        <ul class="checks">
+          <li><span class="check">✓</span> Monitoreo de disponibilidad</li>
+          <li><span class="check">✓</span> Actualizaciones de seguridad</li>
+          <li><span class="check">✓</span> Copias de respaldo mensuales</li>
+          <li><span class="check">✓</span> Soporte por WhatsApp (48 h)</li>
+        </ul>
+      </div>
+      <div class="card plan featured">
+        <span class="plan-badge">Más elegido</span>
+        <div><h3>🛡️ Protegido</h3></div>
+        <div class="plan-price">USD 90/mes</div>
+        <p class="tagline">Para sitios que no pueden fallar.</p>
+        <ul class="checks">
+          <li><span class="check">✓</span> Todo lo de Esencial</li>
+          <li><span class="check">✓</span> Copias de respaldo semanales</li>
+          <li><span class="check">✓</span> Revisión de seguridad mensual</li>
+          <li><span class="check">✓</span> Cambios menores incluidos</li>
+          <li><span class="check">✓</span> Informe mensual de estado</li>
+          <li><span class="check">✓</span> Soporte prioritario (24 h)</li>
+        </ul>
+      </div>
+      <div class="card plan">
+        <div><h3>🛡️ Enterprise</h3></div>
+        <div class="plan-price">a medida</div>
+        <p class="tagline">Sistemas críticos y a gran escala.</p>
+        <ul class="checks">
+          <li><span class="check">✓</span> Acuerdo de disponibilidad (SLA)</li>
+          <li><span class="check">✓</span> Monitoreo avanzado</li>
+          <li><span class="check">✓</span> Respuesta ante incidentes</li>
+          <li><span class="check">✓</span> Auditorías de seguridad periódicas</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="blueprint" id="faq">
+  <div class="wrap">
+    <header class="plate">
+      <div class="plate-code">Lámina 08 — Consultas frecuentes</div>
+      <h2>Preguntas antes de contratar</h2>
+    </header>
+    <div class="faq">
+      <div class="faq-item" data-open="true">
+        <button class="faq-q" aria-expanded="true">
+          ¿Por qué contratar un desarrollo a medida en vez de Tienda Nube o Shopify?
+          <span class="chev">▾</span>
+        </button>
+        <p class="faq-a">Las plataformas cobran abono mensual y comisiones por venta, y te limitan a lo que su plantilla permite. Un desarrollo propio es tuyo: sin comisiones, adaptado a cómo trabaja tu negocio, y crece con vos. En muchos casos el costo total al año o dos ya es menor.</p>
+      </div>
+      <div class="faq-item" data-open="false">
+        <button class="faq-q" aria-expanded="false">
+          ¿Cuánto tarda un proyecto?
+          <span class="chev">▾</span>
+        </button>
+        <p class="faq-a">Una landing, 1 a 2 semanas. Un sitio institucional, 2 a 4. Tiendas y sistemas, entre 4 y 8 según el alcance. Antes de empezar te doy un plazo concreto por escrito y vas viendo avances durante el desarrollo.</p>
+      </div>
+      <div class="faq-item" data-open="false">
+        <button class="faq-q" aria-expanded="false">
+          ¿Cómo se paga?
+          <span class="chev">▾</span>
+        </button>
+        <p class="faq-a">50% para iniciar y 50% contra entrega. En proyectos grandes se puede dividir por etapas. Los precios se expresan en USD porque hosting, dominios y herramientas se pagan en divisa, pero abonás en pesos al cambio del día.</p>
+      </div>
+      <div class="faq-item" data-open="false">
+        <button class="faq-q" aria-expanded="false">
+          ¿Qué pasa si el proyecto cambia sobre la marcha?
+          <span class="chev">▾</span>
+        </button>
+        <p class="faq-a">El alcance se cierra por escrito antes de arrancar. Si surge algo nuevo durante el desarrollo, se cotiza aparte — así el precio original nunca se pisa y vos decidís qué se suma.</p>
+      </div>
+      <div class="faq-item" data-open="false">
+        <button class="faq-q" aria-expanded="false">
+          ¿Qué pasa después de la entrega?
+          <span class="chev">▾</span>
+        </button>
+        <p class="faq-a">El proyecto queda a tu nombre: dominio, hosting y código. Podés seguir por tu cuenta o contratar un plan de mantenimiento para que yo me ocupe de seguridad, respaldos y cambios.</p>
+      </div>
+      <div class="faq-item" data-open="false">
+        <button class="faq-q" aria-expanded="false">
+          ¿Trabajás con clientes de cualquier parte del país?
+          <span class="chev">▾</span>
+        </button>
+        <p class="faq-a">Sí. Todo el proceso es remoto: reuniones por videollamada, avances por WhatsApp y entregas online. Ya trabajé con comercios, ONGs e industrias de distintas provincias.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="blueprint alt" id="contacto">
+  <div class="wrap">
+    <div class="final">
+      <h2>Contame qué necesita tu negocio</h2>
+      <p>La primera consulta no tiene costo ni compromiso. Me contás tu situación y te digo con honestidad qué te conviene, aunque no sea contratarme.</p>
+      <div class="ctas">
+        <a class="btn" href="https://wa.me/5490000000000?text=Hola%20Atlas%2C%20quiero%20hacer%20una%20consulta%20por%20un%20proyecto" target="_blank" rel="noreferrer">💬 Escribir por WhatsApp</a>
+        <a class="btn ghost" href="mailto:contacto@atlastech.com.ar">contacto@atlastech.com.ar</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <span class="footer-brand"><img src="assets/logo.png" alt="" />ATLAS <small>Soluciones Tecnológicas</small></span>
+    <span class="footer-meta">atlastech.com.ar · Argentina · © 2026</span>
+  </div>
+</footer>
+
+<a class="wa-float" href="https://wa.me/5490000000000?text=Hola%20Atlas%2C%20quiero%20hacer%20una%20consulta%20por%20un%20proyecto" target="_blank" rel="noreferrer" aria-label="Consultar por WhatsApp">
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+<script>
+  document.querySelectorAll('.faq-q').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var item = btn.closest('.faq-item');
+      var isOpen = item.dataset.open === 'true';
+      document.querySelectorAll('.faq-item').forEach(function (i) {
+        i.dataset.open = 'false';
+        i.querySelector('.faq-q').setAttribute('aria-expanded', 'false');
+      });
+      if (!isOpen) {
+        item.dataset.open = 'true';
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
