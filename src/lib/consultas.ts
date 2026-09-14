@@ -6,7 +6,8 @@ import {
   inicioDeSemana,
   type EstadoHidrico,
 } from "@/lib/riego";
-import type { Parcela, Riego } from "@prisma/client";
+import { calcularBalance, type Balance } from "@/lib/balance";
+import type { ClimaDia, Configuracion, Parcela, Riego } from "@prisma/client";
 
 export type ParcelaConEstado = Parcela & {
   ultimoRiego: Date | null;
@@ -14,18 +15,34 @@ export type ParcelaConEstado = Parcela & {
   litrosTotales: number;
   riegosCompletados: number;
   estado: EstadoHidrico;
+  balance: Balance;
 };
+
+/** La configuración es una fila única; se crea con los valores por defecto. */
+export async function obtenerConfiguracion(): Promise<Configuracion> {
+  return prisma.configuracion.upsert({
+    where: { id: "default" },
+    update: {},
+    create: { id: "default" },
+  });
+}
 
 export type RiegoConParcela = Riego & { parcela: Parcela };
 
 /** Parcelas con su último riego, el próximo programado y el acumulado de agua. */
 export async function obtenerParcelasConEstado(ahora = new Date()): Promise<ParcelaConEstado[]> {
-  const parcelas = await prisma.parcela.findMany({
-    orderBy: { nombre: "asc" },
-    include: { riegos: { orderBy: { fechaHora: "desc" } } },
-  });
+  const [parcelas, configuracion] = await Promise.all([
+    prisma.parcela.findMany({
+      orderBy: { nombre: "asc" },
+      include: {
+        riegos: { orderBy: { fechaHora: "desc" } },
+        clima: { orderBy: { fecha: "asc" } },
+      },
+    }),
+    obtenerConfiguracion(),
+  ]);
 
-  return parcelas.map(({ riegos, ...parcela }) => {
+  return parcelas.map(({ riegos, clima, ...parcela }) => {
     const completados = riegos.filter((riego) => riego.estado === "COMPLETADO");
     const programadosFuturos = riegos
       .filter((riego) => riego.estado === "PROGRAMADO" && riego.fechaHora >= ahora)
@@ -40,8 +57,34 @@ export async function obtenerParcelasConEstado(ahora = new Date()): Promise<Parc
       litrosTotales: completados.reduce((total, riego) => total + (riego.litros ?? 0), 0),
       riegosCompletados: completados.length,
       estado: estadoHidrico(ultimoRiego, parcela.frecuenciaDias, ahora),
+      balance: calcularBalance({ parcela, clima, configuracion, ultimoRiego, ahora }),
     };
   });
+}
+
+export type DatosCalculadora = {
+  parcelas: Parcela[];
+  configuracion: Configuracion;
+  clima: ClimaDia[];
+  ultimoRiego: Date | null;
+};
+
+/** Todo lo que la calculadora necesita para una parcela: clima, config y último riego. */
+export async function obtenerDatosCalculadora(parcelaId?: string): Promise<DatosCalculadora> {
+  const [parcelas, configuracion] = await Promise.all([obtenerParcelas(), obtenerConfiguracion()]);
+  const elegida = parcelas.find((parcela) => parcela.id === parcelaId) ?? parcelas[0];
+
+  if (!elegida) return { parcelas, configuracion, clima: [], ultimoRiego: null };
+
+  const [clima, ultimo] = await Promise.all([
+    prisma.climaDia.findMany({ where: { parcelaId: elegida.id }, orderBy: { fecha: "asc" } }),
+    prisma.riego.findFirst({
+      where: { parcelaId: elegida.id, estado: "COMPLETADO" },
+      orderBy: { fechaHora: "desc" },
+    }),
+  ]);
+
+  return { parcelas, configuracion, clima, ultimoRiego: ultimo?.fechaHora ?? null };
 }
 
 export async function obtenerParcelas() {
