@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+@theme {
+  --color-campo-50: #f1f8ee;
+  --color-campo-100: #dcefd4;
+  --color-campo-200: #bbdfad;
+  --color-campo-300: #92c87e;
+  --color-campo-400: #6aad55;
+  --color-campo-500: #4b9038;
+  --color-campo-600: #397229;
+  --color-campo-700: #2e5a23;
+  --color-campo-800: #27481f;
+  --color-campo-900: #213c1c;
+  --color-agua-400: #38bdf8;
+  --color-agua-500: #0ea5e9;
+  --color-agua-600: #0284c7;
+  --color-tierra-500: #a16207;
+}
+
+:root {
+  --fondo: #f6f7f4;
+  --superficie: #ffffff;
+  --superficie-suave: #f9faf7;
+  --borde: #e2e6dd;
+  --texto: #1b2419;
+  --texto-suave: #5d6b58;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #12160f;
+    --superficie: #1b2118;
+    --superficie-suave: #222a1e;
+    --borde: #303a2b;
+    --texto: #e9efe5;
+    --texto-suave: #9fae98;
+  }
+}
+
+body {
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+@utility boton {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60;
+}
+
+@layer components {
+  .tarjeta {
+    background: var(--superficie);
+    border-color: var(--borde);
+    @apply rounded-xl border p-5 shadow-sm;
+  }
+
+  .etiqueta {
+    color: var(--texto-suave);
+    @apply mb-1 block text-sm font-medium;
+  }
+
+  .campo {
+    background: var(--superficie-suave);
+    border-color: var(--borde);
+    color: var(--texto);
+    @apply w-full rounded-lg border px-3 py-2 text-sm outline-none transition;
+  }
+
+  .campo:focus {
+    @apply border-campo-500 ring-2 ring-campo-500/25;
+  }
+
+  .boton-primario {
+    @apply boton bg-campo-600 text-white hover:bg-campo-700;
+  }
+
+  .boton-secundario {
+    border-color: var(--borde);
+    color: var(--texto);
+    @apply boton border bg-transparent hover:bg-campo-50 hover:text-campo-800;
+  }
+
+  .boton-agua {
+    @apply boton bg-agua-600 text-white hover:bg-agua-500;
+  }
+
+  .boton-texto {
+    color: var(--texto-suave);
+    @apply boton px-2 py-1 text-xs font-medium hover:text-red-600;
+  }
+
+  .insignia {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  }
+
+  .texto-suave {
+    color: var(--texto-suave);
+  }
+}

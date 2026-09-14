@@ -1,0 +1,47 @@
+// AgroRiego — modelo de datos del MVP
+// SQLite no soporta enums en Prisma: los estados se guardan como texto
+// usando las constantes de src/lib/constantes.ts
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Parcela {
+  id           String   @id @default(cuid())
+  nombre       String   @unique
+  superficieHa Float
+  cultivo      String
+  tipoSuelo    String
+  metodoRiego  String
+  // Caudal del sistema de riego en litros por hora, para estimar el agua aplicada
+  caudalLh     Float
+  // Cada cuántos días conviene regar esta parcela
+  frecuenciaDias Int    @default(3)
+  activa       Boolean  @default(true)
+  notas        String?
+  creadaEn     DateTime @default(now())
+
+  riegos Riego[]
+}
+
+model Riego {
+  id         String   @id @default(cuid())
+  parcelaId  String
+  parcela    Parcela  @relation(fields: [parcelaId], references: [id], onDelete: Cascade)
+  // Momento programado del riego (o momento real si se registra a posteriori)
+  fechaHora  DateTime
+  duracionMin Int
+  estado     String   @default("PROGRAMADO")
+  // Litros efectivamente aplicados; sólo se completa al marcar el riego como hecho
+  litros     Float?
+  notas      String?
+  creadoEn   DateTime @default(now())
+
+  @@index([parcelaId])
+  @@index([fechaHora])
+}
