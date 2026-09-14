@@ -7,7 +7,9 @@ const ENLACES = [
   { href: "/", etiqueta: "Panel" },
   { href: "/parcelas", etiqueta: "Parcelas" },
   { href: "/riegos", etiqueta: "Riegos" },
+  { href: "/calculadora", etiqueta: "Calculadora" },
   { href: "/historial", etiqueta: "Historial" },
+  { href: "/configuracion", etiqueta: "Config" },
 ];
 
 export function NavegacionPrincipal() {

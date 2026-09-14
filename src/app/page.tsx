@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { obtenerResumen } from "@/lib/consultas";
-import { formatearFecha, formatearLitros, formatearNumero } from "@/lib/formato";
+import {
+  formatearDuracion,
+  formatearFecha,
+  formatearLitros,
+  formatearNumero,
+} from "@/lib/formato";
 import { TarjetaRiego } from "@/components/TarjetaRiego";
 import { EncabezadoPagina, EstadoVacio, Metrica } from "@/components/Ui";
 
@@ -15,9 +20,14 @@ export default async function PaginaPanel() {
         titulo="Panel"
         descripcion="Estado del riego de tus parcelas de un vistazo."
         accion={
-          <Link href="/riegos" className="boton-agua">
-            + Programar riego
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/calculadora" className="boton-secundario">
+              Calculadora
+            </Link>
+            <Link href="/riegos" className="boton-agua">
+              + Programar riego
+            </Link>
+          </div>
         }
       />
 
@@ -113,6 +123,25 @@ export default async function PaginaPanel() {
                     {parcela.frecuenciaDias} día(s)
                     {parcela.ultimoRiego && ` · último: ${formatearFecha(parcela.ultimoRiego)}`}
                   </p>
+                  <p className="texto-suave mt-1 text-sm">
+                    Déficit {formatearNumero(parcela.balance.deficitMm)} mm ·{" "}
+                    {Math.round(parcela.balance.agotamiento * 100)}% del agua útil ·{" "}
+                    <strong>
+                      regar {formatearDuracion(parcela.balance.aplicacion.minutos)} (
+                      {formatearLitros(parcela.balance.aplicacion.litros)})
+                    </strong>
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Link
+                      href={`/riegos?parcela=${parcela.id}&duracion=${parcela.balance.aplicacion.minutos}`}
+                      className="boton-agua"
+                    >
+                      Programar
+                    </Link>
+                    <Link href={`/calculadora?parcela=${parcela.id}`} className="boton-secundario">
+                      Ver cálculo
+                    </Link>
+                  </div>
                 </li>
               ))}
             </ul>

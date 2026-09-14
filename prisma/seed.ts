@@ -3,6 +3,8 @@ import { litrosEstimados } from "../src/lib/riego";
 
 const prisma = new PrismaClient();
 
+// Coordenadas de referencia en el oasis sur de Mendoza, para poder probar la
+// sincronización de clima contra Open-Meteo sin cargar nada a mano.
 const PARCELAS = [
   {
     nombre: "Lote 1 — Norte",
@@ -10,8 +12,14 @@ const PARCELAS = [
     cultivo: "Maíz",
     tipoSuelo: "Franco",
     metodoRiego: "Pivote",
-    caudalLh: 18000,
+    caudalLh: 60000,
     frecuenciaDias: 4,
+    etapaCultivo: "MEDIA",
+    profundidadRaizM: 1,
+    umbralAgotamiento: 0.5,
+    potenciaBombaKw: 15,
+    latitud: -34.6177,
+    longitud: -68.3301,
     notas: "Sector con mejor drenaje, responde bien a riegos largos.",
   },
   {
@@ -20,8 +28,14 @@ const PARCELAS = [
     cultivo: "Hortalizas",
     tipoSuelo: "Arenoso",
     metodoRiego: "Goteo",
-    caudalLh: 2400,
+    caudalLh: 20000,
     frecuenciaDias: 2,
+    etapaCultivo: "DESARROLLO",
+    profundidadRaizM: 0.4,
+    umbralAgotamiento: 0.4,
+    potenciaBombaKw: 3,
+    latitud: -34.6252,
+    longitud: -68.3419,
     notas: null,
   },
   {
@@ -30,8 +44,14 @@ const PARCELAS = [
     cultivo: "Vid",
     tipoSuelo: "Pedregoso",
     metodoRiego: "Goteo",
-    caudalLh: 3600,
+    caudalLh: 25000,
     frecuenciaDias: 7,
+    etapaCultivo: "FINAL",
+    profundidadRaizM: 1.2,
+    umbralAgotamiento: 0.6,
+    potenciaBombaKw: 5.5,
+    latitud: -34.5988,
+    longitud: -68.3702,
     notas: "Riego deficitario controlado durante la maduración.",
   },
   {
@@ -40,8 +60,14 @@ const PARCELAS = [
     cultivo: "Olivo",
     tipoSuelo: "Arcilloso",
     metodoRiego: "Microaspersión",
-    caudalLh: 9000,
+    caudalLh: 45000,
     frecuenciaDias: 10,
+    etapaCultivo: "MEDIA",
+    profundidadRaizM: 1.2,
+    umbralAgotamiento: 0.55,
+    potenciaBombaKw: 11,
+    latitud: -34.5811,
+    longitud: -68.3155,
     notas: null,
   },
 ];
@@ -55,8 +81,15 @@ function fecha(diasDesdeHoy: number, hora: number) {
 }
 
 async function main() {
+  await prisma.climaDia.deleteMany();
   await prisma.riego.deleteMany();
   await prisma.parcela.deleteMany();
+
+  await prisma.configuracion.upsert({
+    where: { id: "default" },
+    update: { etoDiariaMm: 5.2, precioKwh: 85, precioAguaM3: 12 },
+    create: { id: "default", etoDiariaMm: 5.2, precioKwh: 85, precioAguaM3: 12 },
+  });
 
   const creadas = new Map<string, { id: string; caudalLh: number }>();
   for (const datos of PARCELAS) {
@@ -109,7 +142,25 @@ async function main() {
     });
   }
 
-  console.log(`Datos de ejemplo cargados: ${PARCELAS.length} parcelas, ${riegos.length} riegos.`);
+  // Clima de los últimos 20 días: sin esto el balance hídrico arrancaría estimando
+  let diasClima = 0;
+  for (const [nombre, parcela] of creadas) {
+    for (let atras = 20; atras >= 0; atras -= 1) {
+      const dia = fecha(-atras, 0);
+      // Serie sintética: ETo de verano con oscilación y alguna lluvia aislada
+      const etoMm = Math.round((5.5 + Math.sin(atras / 2) * 1.6) * 10) / 10;
+      const lluviaMm = atras % 7 === 3 ? 8 : 0;
+      await prisma.climaDia.create({
+        data: { parcelaId: parcela.id, fecha: dia, etoMm, lluviaMm, fuente: "OPEN_METEO" },
+      });
+      diasClima += 1;
+    }
+    void nombre;
+  }
+
+  console.log(
+    `Datos de ejemplo cargados: ${PARCELAS.length} parcelas, ${riegos.length} riegos, ${diasClima} días de clima.`,
+  );
 }
 
 main()
