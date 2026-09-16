@@ -45,6 +45,8 @@ const PARCELAS = [
     tipoSuelo: "Pedregoso",
     metodoRiego: "Goteo",
     caudalLh: 25000,
+    // Eficiencia medida a campo, bastante por debajo del 90% de diseño
+    eficienciaRiego: 0.78,
     frecuenciaDias: 7,
     etapaCultivo: "FINAL",
     profundidadRaizM: 1.2,

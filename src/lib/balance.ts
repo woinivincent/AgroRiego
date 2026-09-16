@@ -1,4 +1,4 @@
-import type { ClimaDia, Configuracion, Parcela } from "@prisma/client";
+import type { Configuracion, Parcela } from "@prisma/client";
 import {
   aguaUtilTotalMm,
   aplicacionDesdeLamina,
@@ -36,9 +36,14 @@ export type Balance = {
   aplicacion: Aplicacion;
   costo: Costo;
   eficienciaMetodo: number;
+  /** true si la parcela tiene una eficiencia medida en vez del valor de diseño. */
+  eficienciaEsMedida: boolean;
 };
 
-function resolverFuente(dias: ClimaDia[], huboEstimacion: boolean): FuenteClima {
+/** Un día de clima reducido a lo que el balance necesita. */
+export type DiaBalance = { fecha: Date; etoMm: number; lluviaMm: number; fuente: string };
+
+function resolverFuente(dias: DiaBalance[], huboEstimacion: boolean): FuenteClima {
   if (dias.length === 0) return "ESTIMADO";
   const fuentes = new Set(dias.map((dia) => dia.fuente));
   if (huboEstimacion || fuentes.size > 1) return "MIXTA";
@@ -61,7 +66,7 @@ export function calcularBalance({
   laminaObjetivoMm,
 }: {
   parcela: Parcela;
-  clima: ClimaDia[];
+  clima: DiaBalance[];
   configuracion: Configuracion;
   ultimoRiego: Date | null;
   ahora?: Date;
@@ -109,6 +114,7 @@ export function calcularBalance({
     superficieHa: parcela.superficieHa,
     caudalLh: parcela.caudalLh,
     metodoRiego: parcela.metodoRiego,
+    eficienciaPropia: parcela.eficienciaRiego,
   });
 
   return {
@@ -132,6 +138,7 @@ export function calcularBalance({
       precioKwh: configuracion.precioKwh,
       precioAguaM3: configuracion.precioAguaM3,
     }),
-    eficienciaMetodo: eficiencia(parcela.metodoRiego),
+    eficienciaMetodo: eficiencia(parcela.metodoRiego, parcela.eficienciaRiego),
+    eficienciaEsMedida: Boolean(parcela.eficienciaRiego),
   };
 }

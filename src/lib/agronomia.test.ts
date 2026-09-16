@@ -5,6 +5,7 @@ import {
   aplicacionDesdeLamina,
   costoAplicacion,
   deficitAcumuladoMm,
+  eficiencia,
   kc,
   laminaDesdeDuracion,
   laminaMaximaMm,
@@ -59,17 +60,62 @@ describe("aplicación de agua", () => {
 });
 
 describe("suelo", () => {
-  it("calcula el agua útil según textura y profundidad de raíces", () => {
-    assert.equal(aguaUtilTotalMm("Franco", 1), 140);
-    assert.equal(aguaUtilTotalMm("Arenoso", 0.5), 35);
+  it("calcula el agua útil como agua por metro × profundidad de raíces", () => {
+    assert.equal(aguaUtilTotalMm("Franco", 1), 165);
+    assert.equal(aguaUtilTotalMm("Franco", 0.5), 82.5);
   });
 
   it("topea la lámina de reposición en el umbral de agotamiento", () => {
-    assert.equal(laminaMaximaMm("Franco", 1, 0.5), 70);
+    assert.equal(laminaMaximaMm("Franco", 1, 0.5), 82.5);
   });
 
   it("usa un valor por defecto para una textura desconocida", () => {
     assert.equal(aguaUtilTotalMm("Volcánico", 1), 120);
+  });
+
+  // La relación entre texturas importa más que los números exactos, y es
+  // justamente donde es fácil equivocarse.
+  it("crece con el contenido de finos desde la arena hasta el franco arcilloso", () => {
+    const porMetro = (suelo: string) => aguaUtilTotalMm(suelo, 1);
+    assert.ok(porMetro("Arenoso") < porMetro("Franco arenoso"));
+    assert.ok(porMetro("Franco arenoso") < porMetro("Franco"));
+    assert.ok(porMetro("Franco") < porMetro("Limoso"));
+    assert.ok(porMetro("Limoso") < porMetro("Franco arcilloso"));
+  });
+
+  it("vuelve a bajar en la arcilla pura: retiene mucha agua, pero no toda es útil", () => {
+    // El máximo de agua útil está en el franco arcilloso, no en la arcilla:
+    // en la arcilla buena parte del agua queda por debajo del punto de
+    // marchitez permanente y la planta no puede extraerla.
+    assert.ok(aguaUtilTotalMm("Arcilloso", 1) < aguaUtilTotalMm("Franco arcilloso", 1));
+  });
+});
+
+describe("eficiencia de aplicación", () => {
+  it("usa el valor de diseño del método cuando la parcela no midió el suyo", () => {
+    assert.equal(eficiencia("Goteo"), 0.9);
+    assert.equal(eficiencia("Goteo", null), 0.9);
+  });
+
+  it("prefiere la eficiencia medida de la parcela sobre la tabla", () => {
+    // Un sistema de surco real en Cuyo puede estar muy por debajo del 60%
+    // de manual: la parcela tiene que poder decir la suya.
+    assert.equal(eficiencia("Surco", 0.35), 0.35);
+  });
+
+  it("ignora valores imposibles y cae al valor de diseño", () => {
+    assert.equal(eficiencia("Goteo", 0), 0.9);
+    assert.equal(eficiencia("Goteo", 1.5), 0.9);
+    assert.equal(eficiencia("Goteo", -0.5), 0.9);
+  });
+
+  it("aplica la eficiencia medida al cálculo de agua y de tiempo", () => {
+    const comun = { laminaNetaMm: 10, superficieHa: 1, caudalLh: 20000, metodoRiego: "Surco" };
+    const manual = aplicacionDesdeLamina({ ...comun, eficienciaPropia: 0.35 });
+    const diseno = aplicacionDesdeLamina(comun);
+    // Menos eficiencia real significa más agua y más tiempo de bomba
+    assert.ok(manual.litros > diseno.litros);
+    assert.equal(manual.litros, Math.round(100_000 / 0.35));
   });
 });
 

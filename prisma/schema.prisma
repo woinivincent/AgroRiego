@@ -30,6 +30,9 @@ model Parcela {
   umbralAgotamiento Float @default(0.5)
   // Potencia de la bomba (kW), para estimar el costo de energía de cada riego
   potenciaBombaKw Float?
+  // Eficiencia de aplicación medida de este sistema (0 a 1). Si queda vacía se
+  // usa el valor de diseño que corresponde al método de riego.
+  eficienciaRiego Float?
   // Al completar un riego, agendar automáticamente el siguiente según la frecuencia
   encadenarRiegos Boolean @default(true)
   // Coordenadas del lote: sin ellas no se puede traer el clima de Open-Meteo
@@ -66,7 +69,7 @@ model Riego {
   notas      String?
   creadoEn   DateTime @default(now())
 
-  @@index([parcelaId])
+  @@index([parcelaId, fechaHora])
   @@index([fechaHora])
 }
 

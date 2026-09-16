@@ -3,9 +3,18 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Parcela } from "@prisma/client";
-import { actualizarParcela, crearParcela, type EstadoAccion } from "@/lib/acciones";
+import {
+  actualizarParcela,
+  crearParcela,
+  type EstadoAccion,
+} from "@/lib/acciones";
 import { CULTIVOS, METODOS_RIEGO, TIPOS_SUELO } from "@/lib/constantes";
-import { ETAPAS, ETIQUETA_ETAPA, profundidadRaizSugerida } from "@/lib/agronomia";
+import {
+  EFICIENCIA_METODO,
+  ETAPAS,
+  ETIQUETA_ETAPA,
+  profundidadRaizSugerida,
+} from "@/lib/agronomia";
 import { BotonEnvio } from "@/components/BotonEnvio";
 import { SelectorUbicacion } from "@/components/SelectorUbicacion";
 import { MensajeError } from "@/components/Ui";
@@ -23,8 +32,10 @@ export function FormularioParcela({
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [cultivo, setCultivo] = useState(parcela?.cultivo ?? "");
+  const [metodoRiego, setMetodoRiego] = useState(parcela?.metodoRiego ?? "");
   const [profundidad, setProfundidad] = useState(
-    parcela?.profundidadRaizM ?? profundidadRaizSugerida(parcela?.cultivo ?? ""),
+    parcela?.profundidadRaizM ??
+      profundidadRaizSugerida(parcela?.cultivo ?? ""),
   );
   const [estado, accion] = useActionState(
     esEdicion ? actualizarParcela : crearParcela,
@@ -107,7 +118,13 @@ export function FormularioParcela({
           <label className="etiqueta" htmlFor="tipoSuelo">
             Tipo de suelo
           </label>
-          <select id="tipoSuelo" name="tipoSuelo" className="campo" defaultValue={parcela?.tipoSuelo ?? ""} required>
+          <select
+            id="tipoSuelo"
+            name="tipoSuelo"
+            className="campo"
+            defaultValue={parcela?.tipoSuelo ?? ""}
+            required
+          >
             <option value="" disabled>
               Elegí el suelo
             </option>
@@ -127,7 +144,8 @@ export function FormularioParcela({
             id="metodoRiego"
             name="metodoRiego"
             className="campo"
-            defaultValue={parcela?.metodoRiego ?? ""}
+            value={metodoRiego}
+            onChange={(evento) => setMetodoRiego(evento.target.value)}
             required
           >
             <option value="" disabled>
@@ -156,7 +174,9 @@ export function FormularioParcela({
             defaultValue={parcela?.caudalLh}
             placeholder="1200"
           />
-          <p className="texto-suave mt-1 text-xs">Se usa para estimar los litros aplicados en cada riego.</p>
+          <p className="texto-suave mt-1 text-xs">
+            Se usa para estimar los litros aplicados en cada riego.
+          </p>
         </div>
 
         <div>
@@ -191,68 +211,112 @@ export function FormularioParcela({
               </option>
             ))}
           </select>
-          <p className="texto-suave mt-1 text-xs">Define el Kc con el que se estima la demanda.</p>
-        </div>
-
-        <div>
-          <label className="etiqueta" htmlFor="profundidadRaizM">
-            Profundidad de raíces (m)
-          </label>
-          <input
-            id="profundidadRaizM"
-            name="profundidadRaizM"
-            type="number"
-            step="0.1"
-            min="0.1"
-            className="campo"
-            value={profundidad}
-            onChange={(evento) => setProfundidad(Number(evento.target.value) || 0)}
-            required
-          />
           <p className="texto-suave mt-1 text-xs">
-            Sugerida para {cultivo || "el cultivo"}: {profundidadRaizSugerida(cultivo)} m.
+            Define el Kc con el que se estima la demanda.
           </p>
         </div>
 
-        <div>
-          <label className="etiqueta" htmlFor="umbralAgotamiento">
-            Umbral de agotamiento (0 a 1)
-          </label>
-          <input
-            id="umbralAgotamiento"
-            name="umbralAgotamiento"
-            type="number"
-            step="0.05"
-            min="0.05"
-            max="1"
-            className="campo"
-            defaultValue={parcela?.umbralAgotamiento ?? 0.5}
-            required
-          />
-          <p className="texto-suave mt-1 text-xs">
-            Fracción del agua útil que se deja consumir antes de regar.
-          </p>
-        </div>
+        <details
+          className="sm:col-span-2 rounded-xl border p-4"
+          style={{ borderColor: "var(--borde)" }}
+        >
+          <summary className="cursor-pointer text-sm font-semibold">
+            Ajustes avanzados
+            <span className="texto-suave ml-2 font-normal">
+              ya vienen con valores razonables según el cultivo y el método
+            </span>
+          </summary>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="etiqueta" htmlFor="profundidadRaizM">
+                Profundidad de raíces (m)
+              </label>
+              <input
+                id="profundidadRaizM"
+                name="profundidadRaizM"
+                type="number"
+                step="0.1"
+                min="0.1"
+                className="campo"
+                value={profundidad}
+                onChange={(evento) =>
+                  setProfundidad(Number(evento.target.value) || 0)
+                }
+                required
+              />
+              <p className="texto-suave mt-1 text-xs">
+                Sugerida para {cultivo || "el cultivo"}:{" "}
+                {profundidadRaizSugerida(cultivo)} m.
+              </p>
+            </div>
 
-        <div>
-          <label className="etiqueta" htmlFor="potenciaBombaKw">
-            Potencia de la bomba (kW, opcional)
-          </label>
-          <input
-            id="potenciaBombaKw"
-            name="potenciaBombaKw"
-            type="number"
-            step="0.1"
-            min="0"
-            className="campo"
-            defaultValue={parcela?.potenciaBombaKw ?? ""}
-          />
-          <p className="texto-suave mt-1 text-xs">Se usa para costear la energía de cada riego.</p>
-        </div>
+            <div>
+              <label className="etiqueta" htmlFor="umbralAgotamiento">
+                Umbral de agotamiento (0 a 1)
+              </label>
+              <input
+                id="umbralAgotamiento"
+                name="umbralAgotamiento"
+                type="number"
+                step="0.05"
+                min="0.05"
+                max="1"
+                className="campo"
+                defaultValue={parcela?.umbralAgotamiento ?? 0.5}
+                required
+              />
+              <p className="texto-suave mt-1 text-xs">
+                Fracción del agua útil que se deja consumir antes de regar.
+              </p>
+            </div>
+
+            <div>
+              <label className="etiqueta" htmlFor="potenciaBombaKw">
+                Potencia de la bomba (kW, opcional)
+              </label>
+              <input
+                id="potenciaBombaKw"
+                name="potenciaBombaKw"
+                type="number"
+                step="0.1"
+                min="0"
+                className="campo"
+                defaultValue={parcela?.potenciaBombaKw ?? ""}
+              />
+              <p className="texto-suave mt-1 text-xs">
+                Se usa para costear la energía de cada riego.
+              </p>
+            </div>
+            <div>
+              <label className="etiqueta" htmlFor="eficienciaRiego">
+                Eficiencia medida (0 a 1, opcional)
+              </label>
+              <input
+                id="eficienciaRiego"
+                name="eficienciaRiego"
+                type="number"
+                step="0.05"
+                min="0.05"
+                max="1"
+                className="campo"
+                defaultValue={parcela?.eficienciaRiego ?? ""}
+                placeholder={String(EFICIENCIA_METODO[metodoRiego] ?? "")}
+              />
+              <p className="texto-suave mt-1 text-xs">
+                Vacío usa el valor de diseño del método (
+                {Math.round((EFICIENCIA_METODO[metodoRiego] ?? 0.75) * 100)}
+                %). El de un sistema real a campo suele ser bastante menor.
+              </p>
+            </div>
+          </div>
+        </details>
 
         <fieldset className="sm:col-span-2">
           <legend className="etiqueta">Ubicación del lote</legend>
-          <SelectorUbicacion latitud={parcela?.latitud} longitud={parcela?.longitud} />
+          <SelectorUbicacion
+            latitud={parcela?.latitud}
+            longitud={parcela?.longitud}
+          />
         </fieldset>
 
         <div className="sm:col-span-2">
@@ -294,7 +358,9 @@ export function FormularioParcela({
       <MensajeError mensaje={estado.error} />
 
       <div className="flex gap-2">
-        <BotonEnvio>{esEdicion ? "Guardar cambios" : "Crear parcela"}</BotonEnvio>
+        <BotonEnvio>
+          {esEdicion ? "Guardar cambios" : "Crear parcela"}
+        </BotonEnvio>
       </div>
     </form>
   );

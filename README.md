@@ -39,6 +39,21 @@ Trabaja en cuatro pasos encadenados.
 El botón final agenda ese riego con la duración ya calculada. Los mismos números
 aparecen en el panel, así que desde ahí se programa en un clic.
 
+### Agua útil del suelo
+
+La curva de agua útil por textura **no es monótona**: un suelo arcilloso retiene
+mucha agua total, pero buena parte queda por debajo del punto de marchitez
+permanente y la planta no puede extraerla. El máximo de agua *útil* está en el
+franco arcilloso, no en la arcilla pura. Hay tests que fijan esa relación, que es
+más durable que los números exactos de la tabla.
+
+### Eficiencia de aplicación
+
+Los valores por método (goteo 90%, surco 60%…) son **de diseño ideal**. Un sistema
+real a campo suele rendir bastante menos —en riego gravitacional de Cuyo se
+documentan pérdidas del 45% al 80%— así que cada parcela puede cargar su
+eficiencia medida, y la calculadora avisa cuál de las dos está usando.
+
 ### Lluvia efectiva
 
 No toda la lluvia le sirve al cultivo: las lluvias menores a 2 mm se evaporan
@@ -121,7 +136,7 @@ npm run build && npm start
 | `npm run typecheck` | Chequeo de tipos sin emitir |
 | `npm run db:push` | Sincroniza el schema de Prisma con la base SQLite |
 | `npm run db:seed` | Reemplaza los datos por el set de ejemplo |
-| `npm test` | Tests de la lógica agronómica (`node --test`) |
+| `npm test` | Tests de la lógica agronómica (`node --test`, 21 casos) |
 
 ## Estructura
 
@@ -159,6 +174,23 @@ src/
 
 Los litros se estiman como `caudal (L/h) × duración (min) / 60` y se pueden
 corregir a mano al marcar el riego como realizado.
+
+## Rendimiento
+
+El panel y la vista de parcelas resuelven el filtrado y la agregación en SQL, y
+calculan el balance en TypeScript, donde está testeado. En particular, el clima se
+consulta con una ventana distinta por parcela —sólo los días posteriores a su
+último riego— en vez de traer el histórico completo.
+
+Medido con 200 parcelas, 10.000 riegos y 18.000 días de clima:
+
+| Consulta | Antes | Ahora |
+| --- | --- | --- |
+| `obtenerResumen` (panel) | 831 ms | 41 ms |
+| `obtenerParcelasConEstado` | 427 ms | 21 ms |
+
+A 1000 parcelas y 100.000 riegos —ya fuera de lo realista para una sola
+explotación— el panel queda en unos 320 ms.
 
 ## Sobre los valores agronómicos
 

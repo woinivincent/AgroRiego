@@ -16,13 +16,25 @@ export const EFICIENCIA_METODO: Record<string, number> = {
 
 export const EFICIENCIA_POR_DEFECTO = 0.75;
 
-/** Agua útil del suelo en mm por metro de profundidad, según textura. */
+/**
+ * Agua útil del suelo en mm por metro de profundidad, según textura.
+ *
+ * Ojo con la intuición: la curva NO es monótona. Un suelo arcilloso retiene
+ * mucha agua total, pero buena parte queda retenida por debajo del punto de
+ * marchitez permanente y la planta no puede extraerla. El máximo de agua
+ * *útil* está en el franco arcilloso, no en la arcilla pura.
+ *
+ * Órdenes de magnitud tomados de la tabla de agua disponible (AWC) del USDA
+ * NRCS National Engineering Handbook, parte 652, capítulo 9.
+ */
 export const AGUA_UTIL_MM_POR_M: Record<string, number> = {
+  Arenoso: 50,
   Pedregoso: 60,
-  Arenoso: 70,
-  Franco: 140,
-  Limoso: 160,
-  Arcilloso: 180,
+  "Franco arenoso": 130,
+  Franco: 165,
+  Limoso: 170,
+  "Franco arcilloso": 185,
+  Arcilloso: 165,
 };
 
 export const AGUA_UTIL_POR_DEFECTO = 120;
@@ -63,7 +75,15 @@ export const PROFUNDIDAD_RAIZ_M: Record<string, number> = {
   Otro: 0.8,
 };
 
-export function eficiencia(metodoRiego: string) {
+/**
+ * Eficiencia de aplicación a usar.
+ *
+ * Los valores de la tabla son de diseño ideal. La eficiencia real de un sistema
+ * a campo suele ser bastante menor —en riego gravitacional de Cuyo se documentan
+ * pérdidas del 45% al 80%— así que cada parcela puede fijar la suya medida.
+ */
+export function eficiencia(metodoRiego: string, eficienciaPropia?: number | null) {
+  if (eficienciaPropia && eficienciaPropia > 0 && eficienciaPropia <= 1) return eficienciaPropia;
   return EFICIENCIA_METODO[metodoRiego] ?? EFICIENCIA_POR_DEFECTO;
 }
 
@@ -143,13 +163,15 @@ export function aplicacionDesdeLamina({
   superficieHa,
   caudalLh,
   metodoRiego,
+  eficienciaPropia,
 }: {
   laminaNetaMm: number;
   superficieHa: number;
   caudalLh: number;
   metodoRiego: string;
+  eficienciaPropia?: number | null;
 }): Aplicacion {
-  const rendimiento = eficiencia(metodoRiego);
+  const rendimiento = eficiencia(metodoRiego, eficienciaPropia);
   const laminaBrutaMm = laminaNetaMm / rendimiento;
   const litros = laminaBrutaMm * superficieHa * 10_000;
   const minutos = caudalLh > 0 ? (litros / caudalLh) * 60 : 0;
@@ -168,16 +190,21 @@ export function laminaDesdeDuracion({
   superficieHa,
   caudalLh,
   metodoRiego,
+  eficienciaPropia,
 }: {
   duracionMin: number;
   superficieHa: number;
   caudalLh: number;
   metodoRiego: string;
+  eficienciaPropia?: number | null;
 }) {
   if (superficieHa <= 0) return { litros: 0, laminaNetaMm: 0 };
   const litros = (caudalLh * duracionMin) / 60;
   const laminaBrutaMm = litros / (superficieHa * 10_000);
-  return { litros: Math.round(litros), laminaNetaMm: laminaBrutaMm * eficiencia(metodoRiego) };
+  return {
+    litros: Math.round(litros),
+    laminaNetaMm: laminaBrutaMm * eficiencia(metodoRiego, eficienciaPropia),
+  };
 }
 
 export type Costo = { energia: number; agua: number; total: number };

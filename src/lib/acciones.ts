@@ -37,6 +37,7 @@ function leerParcela(formData: FormData) {
   const profundidadRaizM = numero(formData, "profundidadRaizM");
   const umbralAgotamiento = numero(formData, "umbralAgotamiento");
   const potenciaBombaKw = numero(formData, "potenciaBombaKw");
+  const eficienciaRiego = numero(formData, "eficienciaRiego");
   const latitud = numero(formData, "latitud");
   const longitud = numero(formData, "longitud");
   const notas = texto(formData, "notas");
@@ -63,6 +64,9 @@ function leerParcela(formData: FormData) {
   if (potenciaBombaKw !== null && potenciaBombaKw < 0) {
     return { error: "La potencia de la bomba no puede ser negativa." } as const;
   }
+  if (eficienciaRiego !== null && (eficienciaRiego <= 0 || eficienciaRiego > 1)) {
+    return { error: "La eficiencia medida va entre 0 y 1 (por ejemplo 0,65)." } as const;
+  }
   // Las coordenadas son opcionales, pero si van, van las dos y dentro de rango
   if ((latitud === null) !== (longitud === null)) {
     return { error: "Cargá latitud y longitud juntas, o dejá las dos vacías." } as const;
@@ -87,6 +91,7 @@ function leerParcela(formData: FormData) {
       profundidadRaizM,
       umbralAgotamiento,
       potenciaBombaKw,
+      eficienciaRiego,
       latitud,
       longitud,
       encadenarRiegos: formData.get("encadenarRiegos") !== null,

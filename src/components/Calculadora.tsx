@@ -112,51 +112,95 @@ export function Calculadora({
           ))}
         </select>
         <p className="texto-suave mt-2 text-xs">
-          {formatearNumero(parcela.superficieHa)} ha · {parcela.metodoRiego} (eficiencia{" "}
-          {Math.round(balance.eficienciaMetodo * 100)}%) · suelo {parcela.tipoSuelo} · etapa{" "}
-          {ETIQUETA_ETAPA[parcela.etapaCultivo as Etapa] ?? parcela.etapaCultivo} (Kc{" "}
-          {formatearNumero(balance.coeficienteCultivo, 2)})
+          {formatearNumero(parcela.superficieHa)} ha · {parcela.metodoRiego} · suelo{" "}
+          {parcela.tipoSuelo} · etapa{" "}
+          {ETIQUETA_ETAPA[parcela.etapaCultivo as Etapa] ?? parcela.etapaCultivo}
         </p>
       </div>
 
-      {/* 1. Cuánta agua pide el cultivo */}
+      {/* La respuesta que el productor vino a buscar, antes que cualquier jerga */}
       <section className="tarjeta">
-        <h2 className="mb-1 text-lg font-semibold">1. Demanda del cultivo</h2>
-        <p className="texto-suave mb-4 text-sm">
-          Evapotranspiración acumulada desde el último riego, menos la lluvia efectiva.
+        <p className="texto-suave text-sm">
+          {balance.necesitaRiego
+            ? "Esta parcela necesita riego"
+            : "Esta parcela puede esperar, pero si regás hoy:"}
+        </p>
+        <p className="mt-1 text-4xl font-bold tracking-tight text-agua-600">
+          {formatearDuracion(balance.aplicacion.minutos)}
+        </p>
+        <p className="mt-2 text-lg font-semibold">
+          {formatearLitros(balance.aplicacion.litros)}
+          <span className="texto-suave font-normal"> de agua · </span>
+          {formatearMoneda(balance.costo.total)}
+        </p>
+        <p className="texto-suave mt-1 text-sm">
+          Repone {formatearNumero(balance.laminaSugeridaMm)} mm en{" "}
+          {formatearNumero(parcela.superficieHa)} ha, a {formatearNumero(parcela.caudalLh, 0)} L/h.
         </p>
 
-        <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <Dato
-            etiqueta="Días sin regar"
-            valor={String(balance.diasDesdeUltimoRiego)}
-            detalle={ultimoRiego ? formatearFecha(ultimoRiego) : "sin riegos previos"}
-          />
-          <Dato
-            etiqueta="ETo acumulada"
-            valor={`${formatearNumero(balance.etoAcumuladaMm)} mm`}
-            detalle={`× Kc ${formatearNumero(balance.coeficienteCultivo, 2)}`}
-          />
-          <Dato
-            etiqueta="Lluvia efectiva"
-            valor={`${formatearNumero(balance.lluviaEfectivaAcumuladaMm)} mm`}
-          />
-          <Dato
-            etiqueta="Déficit a reponer"
-            valor={`${formatearNumero(balance.deficitMm)} mm`}
-            detalle={`fuente: ${ETIQUETA_FUENTE[balance.fuenteClima] ?? balance.fuenteClima}`}
-          />
-        </dl>
+        <div className="mt-4 flex flex-wrap items-end gap-3">
+          <div>
+            <label className="etiqueta mb-0.5 text-xs" htmlFor="lamina">
+              Ajustar milímetros a reponer
+            </label>
+            <input
+              id="lamina"
+              type="number"
+              min="0"
+              step="0.5"
+              className="campo w-32"
+              value={formatearEntrada(balance.laminaSugeridaMm)}
+              onChange={(evento) => setLaminaManual(Number(evento.target.value) || 0)}
+            />
+          </div>
+          {laminaManual !== null && (
+            <button type="button" className="boton-secundario" onClick={() => setLaminaManual(null)}>
+              Volver a {formatearNumero(sugerido.laminaSugeridaMm)} mm
+            </button>
+          )}
+        </div>
 
-        <form action={accionClima} className="mt-4 flex flex-wrap items-center gap-3">
+        {excedeSuelo && (
+          <p className="mt-4 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-700">
+            Son más milímetros de los que este suelo puede retener (
+            {formatearNumero(balance.laminaMaximaMm)} mm): el excedente va a percolar bajo las
+            raíces.
+          </p>
+        )}
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link
+            href={`/riegos?parcela=${parcela.id}&duracion=${balance.aplicacion.minutos}`}
+            className="boton-primario"
+          >
+            Programar este riego
+          </Link>
+          <Link href={`/parcelas/${parcela.id}/editar`} className="boton-secundario">
+            Ajustar datos de la parcela
+          </Link>
+        </div>
+      </section>
+
+      {/* Traer el clima es la acción que más cambia el número de arriba */}
+      <section className="tarjeta">
+        <form action={accionClima} className="flex flex-wrap items-center gap-3">
           <input type="hidden" name="parcelaId" value={parcela.id} />
           <BotonEnvio className="boton-agua" textoPendiente="Consultando…">
-            Traer clima de Open-Meteo
+            Actualizar clima
           </BotonEnvio>
-          <span className="texto-suave text-xs">
-            {sinCoordenadas
-              ? "Esta parcela todavía no tiene coordenadas cargadas."
-              : `${formatearNumero(parcela.latitud!, 4)}, ${formatearNumero(parcela.longitud!, 4)} · ${balance.diasConDatoReal} día(s) con dato real`}
+          <span className="texto-suave text-sm">
+            {sinCoordenadas ? (
+              <>
+                Sin coordenadas: se está estimando con {formatearNumero(configuracion.etoDiariaMm)}{" "}
+                mm/día.{" "}
+                <Link href={`/parcelas/${parcela.id}/editar`} className="underline">
+                  Cargalas acá
+                </Link>
+                .
+              </>
+            ) : (
+              `${balance.diasConDatoReal} de ${balance.diasDesdeUltimoRiego} día(s) con clima real · fuente ${ETIQUETA_FUENTE[balance.fuenteClima] ?? balance.fuenteClima}`
+            )}
           </span>
         </form>
 
@@ -166,151 +210,130 @@ export function Calculadora({
             Clima actualizado: {estadoClima.sincronizados} día(s) guardados.
           </p>
         )}
-        {sinCoordenadas && (
-          <p className="texto-suave mt-2 text-xs">
-            <Link href={`/parcelas/${parcela.id}/editar`} className="underline">
-              Cargale las coordenadas
-            </Link>{" "}
-            para traer la ETo real; mientras tanto se usa la ETo de referencia (
-            {formatearNumero(configuracion.etoDiariaMm)} mm/día).
-          </p>
-        )}
       </section>
 
-      {/* 2. Cuánta agua aguanta el suelo */}
-      <section className="tarjeta">
-        <h2 className="mb-1 text-lg font-semibold">2. Qué tolera el suelo</h2>
-        <p className="texto-suave mb-4 text-sm">
-          Regar por encima del tope percola bajo la zona de raíces y se pierde.
-        </p>
+      <details className="tarjeta">
+        <summary className="cursor-pointer font-semibold">Ver el cálculo paso a paso</summary>
 
-        <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <Dato
-            etiqueta="Agua útil"
-            valor={`${formatearNumero(balance.aguaUtilTotalMm)} mm`}
-            detalle={`${parcela.tipoSuelo}, raíces a ${formatearNumero(parcela.profundidadRaizM, 2)} m`}
-          />
-          <Dato
-            etiqueta="Tope por riego"
-            valor={`${formatearNumero(balance.laminaMaximaMm)} mm`}
-            detalle={`umbral ${Math.round(parcela.umbralAgotamiento * 100)}%`}
-          />
-          <Dato etiqueta="Agotamiento" valor={`${porcentaje}%`} />
-          <Dato
-            etiqueta="Estado"
-            valor={balance.necesitaRiego ? "Regar ya" : "Puede esperar"}
-          />
-        </dl>
-
-        <div
-          className="mt-4 h-3 w-full overflow-hidden rounded-full"
-          style={{ background: "var(--superficie-suave)" }}
-          role="img"
-          aria-label={`Agua útil agotada: ${porcentaje} por ciento`}
-        >
-          <div
-            className={`h-full rounded-full ${balance.necesitaRiego ? "bg-amber-500" : "bg-campo-500"}`}
-            style={{ width: `${porcentaje}%` }}
-          />
-        </div>
-      </section>
-
-      {/* 3. Cuánto hay que regar */}
-      <section className="tarjeta">
-        <h2 className="mb-1 text-lg font-semibold">3. Cuánto regar</h2>
-        <p className="texto-suave mb-4 text-sm">
-          De la lámina objetivo salen los litros y el tiempo de bomba, sumando el agua que el
-          método pierde en el camino.
-        </p>
-
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="mt-5 space-y-6">
           <div>
-            <label className="etiqueta" htmlFor="lamina">
-              Lámina objetivo (mm)
-            </label>
-            <input
-              id="lamina"
-              type="number"
-              min="0"
-              step="0.5"
-              className="campo"
-              value={formatearEntrada(balance.laminaSugeridaMm)}
-              onChange={(evento) => setLaminaManual(Number(evento.target.value) || 0)}
-            />
-            <button
-              type="button"
-              className="texto-suave mt-1 text-xs underline"
-              onClick={() => setLaminaManual(null)}
-            >
-              Volver a la sugerida ({formatearNumero(sugerido.laminaSugeridaMm)} mm)
-            </button>
+            <h3 className="mb-1 font-semibold">1. Cuánta agua pidió el cultivo</h3>
+            <p className="texto-suave mb-3 text-sm">
+              Evapotranspiración acumulada desde el último riego, por el coeficiente del cultivo,
+              menos la lluvia que realmente aprovechó.
+            </p>
+            <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <Dato
+                etiqueta="Días sin regar"
+                valor={String(balance.diasDesdeUltimoRiego)}
+                detalle={ultimoRiego ? formatearFecha(ultimoRiego) : "sin riegos previos"}
+              />
+              <Dato
+                etiqueta="ETo acumulada"
+                valor={`${formatearNumero(balance.etoAcumuladaMm)} mm`}
+                detalle={`× Kc ${formatearNumero(balance.coeficienteCultivo, 2)}`}
+              />
+              <Dato
+                etiqueta="Lluvia efectiva"
+                valor={`${formatearNumero(balance.lluviaEfectivaAcumuladaMm)} mm`}
+              />
+              <Dato
+                etiqueta="Déficit a reponer"
+                valor={`${formatearNumero(balance.deficitMm)} mm`}
+              />
+            </dl>
           </div>
 
-          <dl className="grid grid-cols-2 gap-4 self-end">
-            <Dato
-              etiqueta="Lámina bruta"
-              valor={`${formatearNumero(balance.aplicacion.laminaBrutaMm)} mm`}
-            />
-            <Dato etiqueta="Agua a aplicar" valor={formatearLitros(balance.aplicacion.litros)} />
-          </dl>
+          <div>
+            <h3 className="mb-1 font-semibold">2. Cuánta agua tolera el suelo</h3>
+            <p className="texto-suave mb-3 text-sm">
+              Regar por encima del tope percola bajo la zona de raíces y se pierde.
+            </p>
+            <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <Dato
+                etiqueta="Agua útil"
+                valor={`${formatearNumero(balance.aguaUtilTotalMm)} mm`}
+                detalle={`${parcela.tipoSuelo}, raíces a ${formatearNumero(parcela.profundidadRaizM, 2)} m`}
+              />
+              <Dato
+                etiqueta="Tope por riego"
+                valor={`${formatearNumero(balance.laminaMaximaMm)} mm`}
+                detalle={`umbral ${Math.round(parcela.umbralAgotamiento * 100)}%`}
+              />
+              <Dato etiqueta="Agotamiento" valor={`${porcentaje}%`} />
+              <Dato etiqueta="Estado" valor={balance.necesitaRiego ? "Regar ya" : "Puede esperar"} />
+            </dl>
+            <div
+              className="mt-4 h-3 w-full overflow-hidden rounded-full"
+              style={{ background: "var(--superficie-suave)" }}
+              role="img"
+              aria-label={`Agua útil agotada: ${porcentaje} por ciento`}
+            >
+              <div
+                className={`h-full rounded-full ${balance.necesitaRiego ? "bg-amber-500" : "bg-campo-500"}`}
+                style={{ width: `${porcentaje}%` }}
+              />
+            </div>
+          </div>
+
+          <div>
+            <h3 className="mb-1 font-semibold">3. Cuánta agua hay que largar</h3>
+            <p className="texto-suave mb-3 text-sm">
+              A los milímetros que faltan se les suma el agua que el método pierde en el camino.
+            </p>
+            <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <Dato
+                etiqueta="Lámina neta"
+                valor={`${formatearNumero(balance.laminaSugeridaMm)} mm`}
+              />
+              <Dato
+                etiqueta="Eficiencia"
+                valor={`${Math.round(balance.eficienciaMetodo * 100)}%`}
+                detalle={balance.eficienciaEsMedida ? "medida en esta parcela" : "valor de diseño"}
+              />
+              <Dato
+                etiqueta="Lámina bruta"
+                valor={`${formatearNumero(balance.aplicacion.laminaBrutaMm)} mm`}
+              />
+              <Dato etiqueta="Agua a aplicar" valor={formatearLitros(balance.aplicacion.litros)} />
+            </dl>
+            {!balance.eficienciaEsMedida && (
+              <p className="texto-suave mt-3 text-xs">
+                La eficiencia es la de diseño del método. Un sistema real a campo suele rendir
+                bastante menos:{" "}
+                <Link href={`/parcelas/${parcela.id}/editar`} className="underline">
+                  cargá la medida
+                </Link>{" "}
+                si la conocés.
+              </p>
+            )}
+          </div>
+
+          <div>
+            <h3 className="mb-1 font-semibold">4. Cuánto cuesta</h3>
+            <p className="texto-suave mb-3 text-sm">
+              Según los precios cargados en{" "}
+              <Link href="/configuracion" className="underline">
+                configuración
+              </Link>
+              .
+            </p>
+            <dl className="grid grid-cols-3 gap-4">
+              <Dato
+                etiqueta="Energía"
+                valor={formatearMoneda(balance.costo.energia)}
+                detalle={
+                  parcela.potenciaBombaKw
+                    ? `${formatearNumero(parcela.potenciaBombaKw)} kW × ${formatearNumero(balance.aplicacion.minutos / 60, 2)} h`
+                    : "sin potencia de bomba cargada"
+                }
+              />
+              <Dato etiqueta="Agua" valor={formatearMoneda(balance.costo.agua)} />
+              <Dato etiqueta="Total" valor={formatearMoneda(balance.costo.total)} />
+            </dl>
+          </div>
         </div>
-
-        {excedeSuelo && (
-          <p className="mt-4 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-700">
-            La lámina supera lo que el suelo puede retener ({formatearNumero(balance.laminaMaximaMm)}{" "}
-            mm): el excedente va a percolar bajo las raíces.
-          </p>
-        )}
-
-        <div className="mt-4 rounded-lg bg-agua-500/10 p-4">
-          <p className="texto-suave text-sm">Tiempo de riego</p>
-          <p className="text-3xl font-bold text-agua-600">
-            {formatearDuracion(balance.aplicacion.minutos)}
-          </p>
-          <p className="texto-suave mt-1 text-xs">
-            a {formatearNumero(parcela.caudalLh, 0)} L/h ={" "}
-            {formatearLitros(balance.aplicacion.litros)}
-          </p>
-        </div>
-      </section>
-
-      {/* 4. Cuánto cuesta */}
-      <section className="tarjeta">
-        <h2 className="mb-1 text-lg font-semibold">4. Costo de la aplicación</h2>
-        <p className="texto-suave mb-4 text-sm">
-          Según los precios cargados en{" "}
-          <Link href="/configuracion" className="underline">
-            configuración
-          </Link>
-          .
-        </p>
-
-        <dl className="grid grid-cols-3 gap-4">
-          <Dato
-            etiqueta="Energía"
-            valor={formatearMoneda(balance.costo.energia)}
-            detalle={
-              parcela.potenciaBombaKw
-                ? `${formatearNumero(parcela.potenciaBombaKw)} kW × ${formatearNumero(balance.aplicacion.minutos / 60, 2)} h`
-                : "sin potencia de bomba cargada"
-            }
-          />
-          <Dato etiqueta="Agua" valor={formatearMoneda(balance.costo.agua)} />
-          <Dato etiqueta="Total" valor={formatearMoneda(balance.costo.total)} />
-        </dl>
-      </section>
-
-      <div className="flex flex-wrap gap-2">
-        <Link
-          href={`/riegos?parcela=${parcela.id}&duracion=${balance.aplicacion.minutos}`}
-          className="boton-primario"
-        >
-          Programar este riego ({formatearDuracion(balance.aplicacion.minutos)})
-        </Link>
-        <Link href={`/parcelas/${parcela.id}/editar`} className="boton-secundario">
-          Ajustar datos de la parcela
-        </Link>
-      </div>
+      </details>
     </div>
   );
 }
