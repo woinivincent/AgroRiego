@@ -7,8 +7,12 @@
 // Límites de la API: la ventana de consulta va de unos 92 días hacia atrás a 16
 // hacia adelante. Fuera de eso hay que ir al endpoint de archivo.
 
-const URL_PRONOSTICO = "https://api.open-meteo.com/v1/forecast";
-const URL_GEOCODIFICACION = "https://geocoding-api.open-meteo.com/v1/search";
+// Se leen en cada llamada y no al importar el módulo: así se pueden apuntar a
+// otro host —una instancia propia de Open-Meteo, que es código abierto, o un
+// servidor de pruebas— sin depender del orden en que se cargan los módulos.
+const urlPronostico = () => process.env.OPEN_METEO_URL ?? "https://api.open-meteo.com/v1/forecast";
+const urlGeocodificacion = () =>
+  process.env.OPEN_METEO_GEOCODING_URL ?? "https://geocoding-api.open-meteo.com/v1/search";
 
 const DIAS_MAX_ATRAS = 92;
 const DIAS_MAX_ADELANTE = 16;
@@ -96,7 +100,7 @@ export async function consultarClima(
     end_date: aFechaISO(rango.hasta),
   });
 
-  const datos = await pedirJson(`${URL_PRONOSTICO}?${parametros}`);
+  const datos = await pedirJson(`${urlPronostico()}?${parametros}`);
   if (typeof datos !== "object" || datos === null || !("daily" in datos)) {
     throw new ErrorClima("La respuesta del servicio de clima no trae datos diarios.");
   }
@@ -145,7 +149,7 @@ export async function buscarLocalidad(nombre: string): Promise<Localidad[]> {
     format: "json",
   });
 
-  const datos = await pedirJson(`${URL_GEOCODIFICACION}?${parametros}`);
+  const datos = await pedirJson(`${urlGeocodificacion()}?${parametros}`);
   const resultados = (datos as { results?: unknown })?.results;
   if (!Array.isArray(resultados)) return [];
 

@@ -78,6 +78,27 @@ la localidad por nombre, o tipeándolas a mano.
 > ~10.000 pedidos por día). Para uso comercial hace falta un plan pago. Si eso es
 > un problema, `src/lib/clima.ts` es el único archivo que habla con la API.
 
+### Comprobar que el clima llega
+
+```bash
+npm run clima:probar                 # San Rafael, Mendoza
+npm run clima:probar -- -31.4 -64.2  # otras coordenadas
+```
+
+Consulta la API real, imprime la ETo y la lluvia de la última semana, verifica
+que los valores sean plausibles y prueba la búsqueda de localidades. Necesita
+salida a internet.
+
+Los tests de `npm test` son otra cosa: levantan un servidor local que imita a
+Open-Meteo y comprueban que el cliente **interpreta** bien la respuesta —incluidos
+los días sin ETo todavía calculada, los errores de la API y las respuestas que no
+son JSON—, pero no pueden saber si la API real sigue devolviendo esa forma. Para
+eso está el script de arriba.
+
+Las URL se pueden cambiar con las variables `OPEN_METEO_URL` y
+`OPEN_METEO_GEOCODING_URL`, por si querés apuntar a una instancia propia
+(Open-Meteo es de código abierto y se puede autohospedar).
+
 ## Programación de riegos
 
 Tres caminos, que conviven:
@@ -136,7 +157,8 @@ npm run build && npm start
 | `npm run typecheck` | Chequeo de tipos sin emitir |
 | `npm run db:push` | Sincroniza el schema de Prisma con la base SQLite |
 | `npm run db:seed` | Reemplaza los datos por el set de ejemplo |
-| `npm test` | Tests de la lógica agronómica (`node --test`, 21 casos) |
+| `npm test` | Tests de agronomía y del cliente de clima (`node --test`, 33 casos) |
+| `npm run clima:probar` | Comprueba contra la API real de Open-Meteo que el clima llega bien |
 
 ## Estructura
 
