@@ -13,14 +13,17 @@ const ESTADO_INICIAL: EstadoAccion = {};
 export function FormularioRiego({
   parcelas,
   parcelaPreseleccionada,
+  duracionSugerida,
 }: {
   parcelas: Parcela[];
   parcelaPreseleccionada?: string;
+  /** Minutos calculados por la calculadora, si se llegó desde ahí. */
+  duracionSugerida?: number;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [estado, accion] = useActionState(programarRiego, ESTADO_INICIAL);
   const [parcelaId, setParcelaId] = useState(parcelaPreseleccionada ?? parcelas[0]?.id ?? "");
-  const [duracion, setDuracion] = useState(60);
+  const [duracion, setDuracion] = useState(duracionSugerida ?? 60);
   const [fechaHora, setFechaHora] = useState("");
 
   // La fecha por defecto se calcula en el cliente para usar la zona horaria del navegador

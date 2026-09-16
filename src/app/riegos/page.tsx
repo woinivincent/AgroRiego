@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { obtenerParcelas, obtenerRiegosProgramados } from "@/lib/consultas";
+import { BotonPlanSemanal } from "@/components/BotonPlanSemanal";
 import { FormularioRiego } from "@/components/FormularioRiego";
 import { TarjetaRiego } from "@/components/TarjetaRiego";
 import { EncabezadoPagina, EstadoVacio } from "@/components/Ui";
@@ -9,13 +10,22 @@ export const dynamic = "force-dynamic";
 export default async function PaginaRiegos({
   searchParams,
 }: {
-  searchParams: Promise<{ parcela?: string }>;
+  searchParams: Promise<{ parcela?: string; duracion?: string }>;
 }) {
-  const [{ parcela: parcelaPreseleccionada }, parcelas, programados] = await Promise.all([
+  const [{ parcela: parcelaPreseleccionada, duracion }, parcelas, programados] = await Promise.all([
     searchParams,
     obtenerParcelas(),
     obtenerRiegosProgramados(),
   ]);
+
+  // La duración llega por URL desde la calculadora: sólo la aceptamos si es sensata.
+  // El tope es de una semana: un pivote grande puede tardar varios días en una
+  // pasada, así que acotar a 24 h descartaría riegos legítimos.
+  const duracionNumero = Number(duracion);
+  const duracionValida =
+    Number.isFinite(duracionNumero) && duracionNumero > 0 && duracionNumero <= 7 * 24 * 60
+      ? Math.round(duracionNumero)
+      : undefined;
 
   const ahora = new Date();
   const atrasados = programados.filter((riego) => riego.fechaHora < ahora);
@@ -31,7 +41,9 @@ export default async function PaginaRiegos({
             <Link href="/parcelas" className="boton-primario">
               Crear una parcela
             </Link>
-          ) : undefined
+          ) : (
+            <BotonPlanSemanal />
+          )
         }
       />
 
@@ -39,7 +51,11 @@ export default async function PaginaRiegos({
         <section>
           <div className="tarjeta">
             <h2 className="mb-4 text-lg font-semibold">Programar riego</h2>
-            <FormularioRiego parcelas={parcelas} parcelaPreseleccionada={parcelaPreseleccionada} />
+            <FormularioRiego
+              parcelas={parcelas}
+              parcelaPreseleccionada={parcelaPreseleccionada}
+              duracionSugerida={duracionValida}
+            />
           </div>
         </section>
 

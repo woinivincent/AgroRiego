@@ -19,6 +19,15 @@ export const CULTIVOS = [
   "Otro",
 ] as const;
 
-export const TIPOS_SUELO = ["Arenoso", "Franco", "Arcilloso", "Limoso", "Pedregoso"] as const;
+// Ordenados de menor a mayor agua útil (ver AGUA_UTIL_MM_POR_M)
+export const TIPOS_SUELO = [
+  "Arenoso",
+  "Pedregoso",
+  "Franco arenoso",
+  "Franco",
+  "Limoso",
+  "Franco arcilloso",
+  "Arcilloso",
+] as const;
 
 export const METODOS_RIEGO = ["Goteo", "Aspersión", "Microaspersión", "Surco", "Manta", "Pivote"] as const;

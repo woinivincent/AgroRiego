@@ -22,11 +22,38 @@ model Parcela {
   caudalLh     Float
   // Cada cuántos días conviene regar esta parcela
   frecuenciaDias Int    @default(3)
+  // Etapa fenológica actual: define el Kc con el que se estima la demanda del cultivo
+  etapaCultivo String   @default("MEDIA")
+  // Profundidad efectiva de raíces (m): junto con la textura del suelo define el agua útil
+  profundidadRaizM Float @default(0.8)
+  // Fracción del agua útil que se deja agotar antes de volver a regar (p de FAO-56)
+  umbralAgotamiento Float @default(0.5)
+  // Potencia de la bomba (kW), para estimar el costo de energía de cada riego
+  potenciaBombaKw Float?
+  // Eficiencia de aplicación medida de este sistema (0 a 1). Si queda vacía se
+  // usa el valor de diseño que corresponde al método de riego.
+  eficienciaRiego Float?
+  // Al completar un riego, agendar automáticamente el siguiente según la frecuencia
+  encadenarRiegos Boolean @default(true)
+  // Coordenadas del lote: sin ellas no se puede traer el clima de Open-Meteo
+  latitud      Float?
+  longitud     Float?
   activa       Boolean  @default(true)
   notas        String?
   creadaEn     DateTime @default(now())
 
   riegos Riego[]
+  clima  ClimaDia[]
+}
+
+// Parámetros globales de la explotación. Siempre hay una sola fila, con id "default".
+model Configuracion {
+  id            String   @id @default("default")
+  // Evapotranspiración de referencia diaria (mm/día) usada por defecto en la calculadora
+  etoDiariaMm   Float    @default(5)
+  precioKwh     Float    @default(0)
+  precioAguaM3  Float    @default(0)
+  actualizadaEn DateTime @updatedAt
 }
 
 model Riego {
@@ -42,6 +69,25 @@ model Riego {
   notas      String?
   creadoEn   DateTime @default(now())
 
-  @@index([parcelaId])
+  @@index([parcelaId, fechaHora])
   @@index([fechaHora])
+}
+
+// Clima diario por parcela, cacheado para no depender de la API en cada consulta
+// y para poder reconstruir el balance hídrico hacia atrás.
+model ClimaDia {
+  id         String   @id @default(cuid())
+  parcelaId  String
+  parcela    Parcela  @relation(fields: [parcelaId], references: [id], onDelete: Cascade)
+  // Día al que corresponde el dato, a las 00:00 locales
+  fecha      DateTime
+  // Evapotranspiración de referencia (mm) y lluvia (mm) de ese día
+  etoMm      Float
+  lluviaMm   Float    @default(0)
+  // OPEN_METEO o MANUAL: un dato cargado a mano nunca se pisa con el de la API
+  fuente     String   @default("OPEN_METEO")
+  obtenidoEn DateTime @default(now())
+
+  @@unique([parcelaId, fecha])
+  @@index([parcelaId])
 }
