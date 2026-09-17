@@ -10,3 +10,6 @@ prisma/dev.db*
 .DS_Store
 *.tsbuildinfo
 next-env.d.ts
+
+# Bandeja del agente de contacto: tiene datos personales de los prospectos
+datos/

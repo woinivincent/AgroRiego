@@ -91,6 +91,66 @@ Tres caminos, que conviven:
 
 Ninguno duplica riegos: si la parcela ya tiene uno programado, no se agrega otro.
 
+## Agente de contacto a prospectos
+
+`npm run agente` es una herramienta aparte de la app: toma la lista de clientes
+prospectados, la segmenta, redacta un mensaje para cada uno y lo deja en una
+bandeja **para que una persona lo apruebe**. No envía nada y no habla con ningún
+servicio de correo ni de mensajería: el último paso siempre es humano.
+
+```bash
+# 1. completá el remitente en agente.config.json (nombre, rol, email, link de agenda)
+npm run agente -- importar prospectos.csv           # export de prospección (.csv o .json)
+npm run agente -- redactar --canal email            # un borrador por prospecto
+npm run agente -- listar --estado BORRADOR          # la cola de revisión
+npm run agente -- ver 8506                          # ficha + mensaje completo
+npm run agente -- aprobar 8506                      # o --todos
+npm run agente -- exportar --formato md --salida mensajes.md
+npm run agente -- marcar-enviado 8506               # los que ya mandaste a mano
+```
+
+El archivo de entrada es el export de prospección tal cual sale, en CSV o JSON
+—por ejemplo el CSV que descarga Vibe Prospecting cuando se exporta una búsqueda—.
+Las columnas se mapean por alias (`professional_email`, `email`, `emails`,
+`correo`…), así que no hace falta renombrar nada, y lo que no se reconoce queda
+guardado igual. Cada prospecto recibe un **id estable**: primero el email,
+después LinkedIn, y como último recurso nombre + empresa. Por eso reimportar el
+mismo archivo no duplica la bandeja ni pisa un mensaje ya aprobado.
+
+### Segmentación
+
+El rubro, la empresa y el cargo definen a quién se le escribe y con qué texto:
+
+| Segmento | Quién | Qué dice el mensaje |
+| --- | --- | --- |
+| `PRODUCTOR` | Fincas, bodegas, viñedos, chacras | Cuántos minutos regar y cuánto cuesta esa aplicación |
+| `RIEGO` | Instaladores y empresas de riego | Es **canal**, no cliente final: justificar el sistema con números del lote del cliente |
+| `AGROINDUSTRIA` | Cooperativas, packing, alimentos | Campo propio y lo que se le pide a los productores que abastecen |
+| `OTRO` | El resto | Texto neutro, y una advertencia: probablemente no sea un cliente |
+
+La prioridad (`ALTA` / `MEDIA` / `BAJA`) ordena la cola: arriba quedan los
+segmentos relevantes con un cargo que decide y alguna vía de contacto. Cada
+prospecto lleva los **motivos** de su clasificación, para que quien revisa vea
+por qué quedó ahí.
+
+### Aprobación
+
+El mensaje se redacta con lo que hay en los datos y **nada más**: si no hay
+empresa, el mensaje va sin esa referencia en vez de inventarla. Todo lo que
+haría dudar sale como advertencia —falta el nombre de pila, el canal elegido no
+tiene dirección, el remitente quedó sin completar, el texto se pasa del límite
+de LinkedIn— y un borrador con advertencias **no se puede aprobar sin
+`--forzar`**. Todos los mensajes cierran ofreciendo una salida al que no quiere
+que le escriban.
+
+Hay tres formatos: `email` (con asunto), `whatsapp` (corto) y `linkedin`
+(hasta 300 caracteres, que es el tope de la plataforma). Cada segmento tiene dos
+variantes de texto, asignadas de forma determinista por id: el mismo prospecto
+recibe siempre el mismo mensaje.
+
+La bandeja vive en `datos/bandeja.json`, **fuera de git**, porque tiene datos
+personales de los prospectos.
+
 ## Stack
 
 - **Next.js 15** (App Router) con Server Components y Server Actions
@@ -136,11 +196,14 @@ npm run build && npm start
 | `npm run typecheck` | Chequeo de tipos sin emitir |
 | `npm run db:push` | Sincroniza el schema de Prisma con la base SQLite |
 | `npm run db:seed` | Reemplaza los datos por el set de ejemplo |
-| `npm test` | Tests de la lógica agronómica (`node --test`, 21 casos) |
+| `npm test` | Tests de la lógica agronómica y del agente (`node --test`, 71 casos) |
+| `npm run agente` | Agente de contacto a prospectos (ver más arriba) |
 
 ## Estructura
 
 ```
+scripts/
+  agente.ts              CLI del agente de contacto
 prisma/
   schema.prisma          modelos Parcela y Riego
   seed.ts                datos de ejemplo
@@ -156,6 +219,9 @@ src/
     clima.ts             cliente de Open-Meteo (ETo, lluvia y geocodificación)
     riego.ts             lógica de dominio (litros, lámina, estado hídrico)
     formato.ts           formato de fechas, litros y duraciones en es-AR
+    prospectos.ts        ingesta del export de prospección y segmentación
+    mensajes.ts          plantillas y validación de los mensajes de contacto
+    bandeja.ts           estado de la cola de aprobación
 ```
 
 ## Modelo de datos
@@ -206,3 +272,4 @@ comportamiento.
 - Kc por fecha de siembra, en lugar de etapa elegida a mano
 - Integración con sensores de humedad o controladores de riego
 - Exportación del historial a CSV y reportes por período
+- Envío real desde el agente de contacto (hoy sólo redacta) y seguimiento de respuestas

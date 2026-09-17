@@ -1,0 +1,13 @@
+{
+  "remitente": {
+    "nombre": "",
+    "rol": "",
+    "empresa": "AgroRiego",
+    "email": "",
+    "telefono": "",
+    "sitio": "",
+    "enlaceDemo": ""
+  },
+  "bandeja": "datos/bandeja.json",
+  "canalPorDefecto": "email"
+}
